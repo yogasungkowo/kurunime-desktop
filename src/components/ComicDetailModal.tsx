@@ -15,6 +15,7 @@ import {
   Search,
   ArrowUpDown,
 } from 'lucide-react'
+import { motion } from 'motion/react'
 
 interface ComicDetailModalProps {
   slug: string
@@ -26,6 +27,7 @@ interface ComicDetailModalProps {
     allChapters: ComicChapter[]
   ) => void
   onSelectComic: (comic: Comic) => void
+  onSelectGenre?: (genreSlug: string, genreTitle: string) => void
 }
 
 export const ComicDetailModal: React.FC<ComicDetailModalProps> = ({
@@ -33,6 +35,7 @@ export const ComicDetailModal: React.FC<ComicDetailModalProps> = ({
   onClose,
   onReadChapter,
   onSelectComic,
+  onSelectGenre,
 }) => {
   const [detail, setDetail] = useState<ComicDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -94,11 +97,19 @@ export const ComicDetailModal: React.FC<ComicDetailModalProps> = ({
     })
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
       onClick={onClose}
       className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto cursor-pointer"
     >
-      <div
+      <motion.div
+        initial={{ opacity: 0, scale: 0.93, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94, y: 12 }}
+        transition={{ type: 'spring', damping: 26, stiffness: 320 }}
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-4xl bg-[#13161f] border border-gray-800 rounded-2xl overflow-hidden shadow-2xl my-auto cursor-default"
       >
@@ -224,12 +235,22 @@ export const ComicDetailModal: React.FC<ComicDetailModalProps> = ({
               {detail.genres && detail.genres.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {detail.genres.map((g, i) => (
-                    <span
+                    <button
                       key={i}
-                      className="text-xs px-2.5 py-1 rounded-lg bg-[#1a1e2b] text-gray-300 border border-gray-800"
+                      onClick={() => {
+                        if (onSelectGenre) {
+                          onClose()
+                          onSelectGenre(g.toLowerCase().replace(/\s+/g, '-'), g)
+                        }
+                      }}
+                      className={`text-xs px-2.5 py-1 rounded-lg bg-[#1a1e2b] text-gray-300 border border-gray-800 transition ${
+                        onSelectGenre
+                          ? 'hover:bg-rose-600 hover:text-white hover:border-rose-500 cursor-pointer shadow-xs'
+                          : ''
+                      }`}
                     >
                       {g}
-                    </span>
+                    </button>
                   ))}
                 </div>
               )}
@@ -340,7 +361,7 @@ export const ComicDetailModal: React.FC<ComicDetailModalProps> = ({
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

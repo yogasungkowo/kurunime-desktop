@@ -12,6 +12,7 @@ import {
   Maximize,
   Minimize,
 } from 'lucide-react'
+import { motion } from 'motion/react'
 
 interface ComicReaderModalProps {
   comicSlug: string
@@ -114,7 +115,13 @@ export const ComicReaderModal: React.FC<ComicReaderModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0b0c10] flex flex-col overflow-hidden select-none">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.22 }}
+      className="fixed inset-0 z-50 bg-[#0b0c10] flex flex-col overflow-hidden select-none"
+    >
       {/* Floating Top Navigation */}
       <header className="h-14 bg-[#11131a]/95 backdrop-blur-md border-b border-gray-800 px-4 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-3">
@@ -263,6 +270,6 @@ export const ComicReaderModal: React.FC<ComicReaderModalProps> = ({
       >
         <ArrowUp className="w-5 h-5" />
       </button>
-    </div>
+    </motion.div>
   )
 }

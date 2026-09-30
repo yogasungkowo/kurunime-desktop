@@ -13,6 +13,7 @@ import {
   Tv,
   RefreshCw,
 } from 'lucide-react'
+import { motion } from 'motion/react'
 
 interface AnimeDetailModalProps {
   animeId: string
@@ -24,6 +25,7 @@ interface AnimeDetailModalProps {
     allEpisodes: EpisodeInfo[]
   ) => void
   onSelectAnime: (anime: Anime) => void
+  onSelectGenre?: (genreId: string, genreTitle: string) => void
 }
 
 export const AnimeDetailModal: React.FC<AnimeDetailModalProps> = ({
@@ -31,6 +33,7 @@ export const AnimeDetailModal: React.FC<AnimeDetailModalProps> = ({
   onClose,
   onPlayEpisode,
   onSelectAnime,
+  onSelectGenre,
 }) => {
   const [detail, setDetail] = useState<AnimeDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -79,11 +82,19 @@ export const AnimeDetailModal: React.FC<AnimeDetailModalProps> = ({
   }
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
       onClick={onClose}
       className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto cursor-pointer"
     >
-      <div
+      <motion.div
+        initial={{ opacity: 0, scale: 0.93, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94, y: 12 }}
+        transition={{ type: 'spring', damping: 26, stiffness: 320 }}
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-4xl bg-[#13161f] border border-gray-800 rounded-2xl overflow-hidden shadow-2xl my-auto cursor-default"
       >
@@ -218,14 +229,31 @@ export const AnimeDetailModal: React.FC<AnimeDetailModalProps> = ({
               {/* Genres */}
               {detail.genres && detail.genres.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {detail.genres.map((g, i) => (
-                    <span
-                      key={i}
-                      className="text-xs px-2.5 py-1 rounded-lg bg-[#1a1e2b] text-gray-300 border border-gray-800"
-                    >
-                      {g}
-                    </span>
-                  ))}
+                  {detail.genres.map((g, i) => {
+                    const matchedGenreId =
+                      detail.genreList?.find(
+                        (item) => item.title.toLowerCase() === g.toLowerCase()
+                      )?.genreId || g.toLowerCase().replace(/\s+/g, '-')
+
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          if (onSelectGenre) {
+                            onClose()
+                            onSelectGenre(matchedGenreId, g)
+                          }
+                        }}
+                        className={`text-xs px-2.5 py-1 rounded-lg bg-[#1a1e2b] text-gray-300 border border-gray-800 transition ${
+                          onSelectGenre
+                            ? 'hover:bg-rose-600 hover:text-white hover:border-rose-500 cursor-pointer shadow-xs'
+                            : ''
+                        }`}
+                      >
+                        {g}
+                      </button>
+                    )
+                  })}
                 </div>
               )}
 
@@ -309,7 +337,7 @@ export const AnimeDetailModal: React.FC<AnimeDetailModalProps> = ({
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

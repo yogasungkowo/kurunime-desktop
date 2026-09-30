@@ -338,4 +338,17 @@ export const comicApi = {
       return []
     }
   },
+
+  async getComicsByGenre(genreSlug: string, page = 1): Promise<Comic[]> {
+    try {
+      const params = new URLSearchParams({ page: String(page), genre: genreSlug })
+      const res = await fetch(`${getBaseUrl()}/manga?${params.toString()}`)
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+      const data = await res.json()
+      return extractList(data).map(mapListComic)
+    } catch (err) {
+      console.error(`Failed to fetch comics by genre ${genreSlug}:`, err)
+      return []
+    }
+  },
 }

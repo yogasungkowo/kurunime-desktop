@@ -18,6 +18,7 @@ import {
   Sparkles,
   HardDrive,
 } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
 
 interface AnimePlayerModalProps {
   animeTitle: string
@@ -331,11 +332,19 @@ export const AnimePlayerModal = ({
   }
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
       onClick={onClose}
       className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col p-2 sm:p-4 overflow-hidden cursor-pointer"
     >
-      <div
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 12 }}
+        transition={{ type: 'spring', damping: 28, stiffness: 320 }}
         onClick={(e) => e.stopPropagation()}
         className="flex-1 flex flex-col w-full h-full max-w-7xl mx-auto overflow-hidden bg-[#0d1017] border border-gray-800 rounded-2xl shadow-2xl p-3 sm:p-4 cursor-default"
       >
@@ -353,7 +362,18 @@ export const AnimePlayerModal = ({
               <h2 className="text-sm sm:text-base font-bold text-white line-clamp-1">
                 {animeTitle}
               </h2>
-              <p className="text-xs text-rose-400 font-semibold">{episodeInfo.title}</p>
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={episodeInfo.episodeId}
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 4 }}
+                  transition={{ duration: 0.18 }}
+                  className="text-xs text-rose-400 font-semibold"
+                >
+                  {episodeInfo.title}
+                </motion.p>
+              </AnimatePresence>
             </div>
           </div>
 
@@ -384,13 +404,24 @@ export const AnimePlayerModal = ({
                   <p className="text-sm font-medium">{errorMsg}</p>
                 </div>
               ) : currentStreamUrl ? (
-                <iframe
-                  src={currentStreamUrl}
-                  title={episodeInfo.title}
-                  className="w-full h-full border-0"
-                  allowFullScreen
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                />
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`${episodeInfo.episodeId}-${currentStreamUrl}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="w-full h-full"
+                  >
+                    <iframe
+                      src={currentStreamUrl}
+                      title={episodeInfo.title}
+                      className="w-full h-full border-0"
+                      allowFullScreen
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    />
+                  </motion.div>
+                </AnimatePresence>
               ) : (
                 <div className="text-xs text-gray-500">Pilih server pemutar di bawah</div>
               )}
@@ -548,174 +579,191 @@ export const AnimePlayerModal = ({
               </button>
             </div>
 
-            {/* Tab 1: Episode List */}
-            {sidebarTab === 'episodes' && (
-              <div className="flex-1 flex flex-col p-3 overflow-hidden">
-                <div className="flex items-center justify-between mb-2 shrink-0">
-                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                    Pilih Episode
-                  </span>
-                  <span className="text-[11px] text-rose-400 font-bold">
-                    Episode {episodeInfo.title.replace(/[^0-9]/g, '') || episodeInfo.title}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-4 gap-1.5 overflow-y-auto pr-1 flex-1">
-                  {allEpisodes.map((ep) => {
-                    const isActive = ep.episodeId === episodeInfo.episodeId
-                    return (
-                      <button
-                        key={ep.episodeId}
-                        onClick={() => onSelectEpisode(ep)}
-                        className={`py-2 px-1 text-xs rounded-lg font-medium text-center transition cursor-pointer ${
-                          isActive
-                            ? 'bg-rose-600 text-white font-bold shadow-md shadow-rose-950/60 ring-1 ring-rose-400'
-                            : 'bg-gray-800/80 text-gray-300 hover:bg-gray-700 hover:text-white border border-gray-700/40'
-                        }`}
-                      >
-                        {ep.num || ep.title.replace(/[^0-9]/g, '') || 'Ep'}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Tab 2: Download Links Section */}
-            {sidebarTab === 'downloads' && (
-              <div className="flex-1 flex flex-col p-3 overflow-hidden">
-                {/* Format Filter Pills */}
-                {sortedDownloadQualities.length > 0 && (
-                  <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-800/80 shrink-0">
-                    <span className="text-[11px] font-bold text-gray-300 flex items-center gap-1.5">
-                      <HardDrive className="w-3.5 h-3.5 text-rose-500" />
-                      Format Video:
+            {/* Animated Tab Switcher Container */}
+            <AnimatePresence mode="wait">
+              {/* Tab 1: Episode List */}
+              {sidebarTab === 'episodes' ? (
+                <motion.div
+                  key="tab-episodes"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.18 }}
+                  className="flex-1 flex flex-col p-3 overflow-hidden"
+                >
+                  <div className="flex items-center justify-between mb-2 shrink-0">
+                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                      Pilih Episode
                     </span>
-                    <div className="flex items-center gap-1">
-                      {(['all', 'mp4', 'mkv'] as const).map((fmt) => (
-                        <button
-                          key={fmt}
-                          onClick={() => setFormatFilter(fmt)}
-                          className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded transition cursor-pointer ${
-                            formatFilter === fmt
-                              ? 'bg-rose-600 text-white shadow-xs'
-                              : 'bg-gray-800 text-gray-400 hover:text-white'
+                    <span className="text-[11px] text-rose-400 font-bold">
+                      Episode {episodeInfo.title.replace(/[^0-9]/g, '') || episodeInfo.title}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-4 gap-1.5 overflow-y-auto pr-1 flex-1">
+                    {allEpisodes.map((ep) => {
+                      const isActive = ep.episodeId === episodeInfo.episodeId
+                      return (
+                        <motion.button
+                          key={ep.episodeId}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => onSelectEpisode(ep)}
+                          className={`py-2 px-1 text-xs rounded-lg font-medium text-center transition cursor-pointer ${
+                            isActive
+                              ? 'bg-rose-600 text-white font-bold shadow-md shadow-rose-950/60 ring-1 ring-rose-400'
+                              : 'bg-gray-800/80 text-gray-300 hover:bg-gray-700 hover:text-white border border-gray-700/40'
                           }`}
                         >
-                          {fmt === 'all' ? 'Semua' : fmt}
-                        </button>
-                      ))}
-                    </div>
+                          {ep.num || ep.title.replace(/[^0-9]/g, '') || 'Ep'}
+                        </motion.button>
+                      )
+                    })}
                   </div>
-                )}
-
-                {/* Download Items */}
-                <div className="flex-1 overflow-y-auto pr-1 space-y-2.5">
-                  {sortedDownloadQualities.length === 0 ? (
-                    <div className="h-48 flex flex-col items-center justify-center gap-2 text-center text-gray-400 p-4">
-                      <Download className="w-8 h-8 text-gray-600" />
-                      <p className="text-xs font-medium">Tautan unduh belum tersedia untuk episode ini.</p>
-                      <p className="text-[10px] text-gray-500">
-                        Coba gunakan pemutar server mirror di sebelah kiri.
-                      </p>
+                </motion.div>
+              ) : (
+                /* Tab 2: Download Links Section */
+                <motion.div
+                  key="tab-downloads"
+                  initial={{ opacity: 0, x: 8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 8 }}
+                  transition={{ duration: 0.18 }}
+                  className="flex-1 flex flex-col p-3 overflow-hidden"
+                >
+                  {/* Format Filter Pills */}
+                  {sortedDownloadQualities.length > 0 && (
+                    <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-800/80 shrink-0">
+                      <span className="text-[11px] font-bold text-gray-300 flex items-center gap-1.5">
+                        <HardDrive className="w-3.5 h-3.5 text-rose-500" />
+                        Format Video:
+                      </span>
+                      <div className="flex items-center gap-1">
+                        {(['all', 'mp4', 'mkv'] as const).map((fmt) => (
+                          <button
+                            key={fmt}
+                            onClick={() => setFormatFilter(fmt)}
+                            className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded transition cursor-pointer ${
+                              formatFilter === fmt
+                                ? 'bg-rose-600 text-white shadow-xs'
+                                : 'bg-gray-800 text-gray-400 hover:text-white'
+                            }`}
+                          >
+                            {fmt === 'all' ? 'Semua' : fmt}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  ) : filteredDownloadQualities.length === 0 ? (
-                    <div className="h-32 flex flex-col items-center justify-center text-center text-gray-400 p-4 text-xs">
-                      Tidak ada video dengan format {formatFilter.toUpperCase()}.
-                    </div>
-                  ) : (
-                    filteredDownloadQualities.map((qualityKey) => {
-                      const group = downloadGroups[qualityKey]
-                      const { format, resolution, displayName } = parseQualityDetails(qualityKey)
+                  )}
 
-                      return (
-                        <div
-                          key={qualityKey}
-                          className="bg-[#181c28] rounded-xl p-3 border border-gray-800/80 hover:border-gray-700/80 transition shadow-sm"
-                        >
-                          {/* Card Header: Resolution, Format & File Size */}
-                          <div className="flex items-center justify-between mb-2.5">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span
-                                className={`text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wide border ${
-                                  format === 'MKV'
-                                    ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
-                                    : 'bg-sky-500/20 text-sky-300 border-sky-500/40'
-                                }`}
-                              >
-                                {format}
-                              </span>
+                  {/* Download Items */}
+                  <div className="flex-1 overflow-y-auto pr-1 space-y-2.5">
+                    {sortedDownloadQualities.length === 0 ? (
+                      <div className="h-48 flex flex-col items-center justify-center gap-2 text-center text-gray-400 p-4">
+                        <Download className="w-8 h-8 text-gray-600" />
+                        <p className="text-xs font-medium">Tautan unduh belum tersedia untuk episode ini.</p>
+                        <p className="text-[10px] text-gray-500">
+                          Coba gunakan pemutar server mirror di sebelah kiri.
+                        </p>
+                      </div>
+                    ) : filteredDownloadQualities.length === 0 ? (
+                      <div className="h-32 flex flex-col items-center justify-center text-center text-gray-400 p-4 text-xs">
+                        Tidak ada video dengan format {formatFilter.toUpperCase()}.
+                      </div>
+                    ) : (
+                      filteredDownloadQualities.map((qualityKey) => {
+                        const group = downloadGroups[qualityKey]
+                        const { format, resolution, displayName } = parseQualityDetails(qualityKey)
 
-                              <span className="text-xs font-bold text-white flex items-center gap-1">
-                                {resolution || displayName}
-                              </span>
+                        return (
+                          <div
+                            key={qualityKey}
+                            className="bg-[#181c28] rounded-xl p-3 border border-gray-800/80 hover:border-gray-700/80 transition shadow-sm"
+                          >
+                            {/* Card Header: Resolution, Format & File Size */}
+                            <div className="flex items-center justify-between mb-2.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span
+                                  className={`text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wide border ${
+                                    format === 'MKV'
+                                      ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
+                                      : 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                                  }`}
+                                >
+                                  {format}
+                                </span>
+
+                                <span className="text-xs font-bold text-white flex items-center gap-1">
+                                  {resolution || displayName}
+                                </span>
+                              </div>
+
+                              {group.size && (
+                                <span className="text-[11px] font-semibold text-rose-300 bg-rose-950/50 border border-rose-800/40 px-2 py-0.5 rounded-md">
+                                  {group.size}
+                                </span>
+                              )}
                             </div>
 
-                            {group.size && (
-                              <span className="text-[11px] font-semibold text-rose-300 bg-rose-950/50 border border-rose-800/40 px-2 py-0.5 rounded-md">
-                                {group.size}
-                              </span>
-                            )}
-                          </div>
+                            {/* Server List */}
+                            <div className="grid grid-cols-2 gap-1.5">
+                              {group.links.map((link, lIdx) => {
+                                const isCopied = copiedUrl === link.url
+                                const styleClass = getServerStyle(link.server)
 
-                          {/* Server List */}
-                          <div className="grid grid-cols-2 gap-1.5">
-                            {group.links.map((link, lIdx) => {
-                              const isCopied = copiedUrl === link.url
-                              const styleClass = getServerStyle(link.server)
-
-                              return (
-                                <div
-                                  key={lIdx}
-                                  className={`flex items-center justify-between rounded-lg border px-2.5 py-1.5 transition text-xs font-medium ${styleClass}`}
-                                >
-                                  {/* Open in browser button */}
-                                  <button
-                                    onClick={() => handleOpenDownload(link.url)}
-                                    className="flex items-center gap-1.5 flex-1 min-w-0 text-left cursor-pointer"
-                                    title={`Download via ${link.server}`}
+                                return (
+                                  <div
+                                    key={lIdx}
+                                    className={`flex items-center justify-between rounded-lg border px-2.5 py-1.5 transition text-xs font-medium ${styleClass}`}
                                   >
-                                    <span className="truncate">{link.server}</span>
-                                    <ExternalLink className="w-3 h-3 opacity-70 shrink-0" />
-                                  </button>
+                                    {/* Open in browser button */}
+                                    <button
+                                      onClick={() => handleOpenDownload(link.url)}
+                                      className="flex items-center gap-1.5 flex-1 min-w-0 text-left cursor-pointer"
+                                      title={`Download via ${link.server}`}
+                                    >
+                                      <span className="truncate">{link.server}</span>
+                                      <ExternalLink className="w-3 h-3 opacity-70 shrink-0" />
+                                    </button>
 
-                                  {/* Copy Link button */}
-                                  <button
-                                    onClick={() => handleCopyLink(link.url)}
-                                    className="p-1 rounded hover:bg-black/30 text-gray-300 hover:text-white transition ml-1 shrink-0 cursor-pointer"
-                                    title="Salin Tautan"
-                                  >
-                                    {isCopied ? (
-                                      <Check className="w-3 h-3 text-emerald-400" />
-                                    ) : (
-                                      <Copy className="w-3 h-3 opacity-60 hover:opacity-100" />
-                                    )}
-                                  </button>
-                                </div>
-                              )
-                            })}
+                                    {/* Copy Link button */}
+                                    <button
+                                      onClick={() => handleCopyLink(link.url)}
+                                      className="p-1 rounded hover:bg-black/30 text-gray-300 hover:text-white transition ml-1 shrink-0 cursor-pointer"
+                                      title="Salin Tautan"
+                                    >
+                                      {isCopied ? (
+                                        <Check className="w-3 h-3 text-emerald-400" />
+                                      ) : (
+                                        <Copy className="w-3 h-3 opacity-60 hover:opacity-100" />
+                                      )}
+                                    </button>
+                                  </div>
+                                )
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      )
-                    })
-                  )}
-                </div>
-
-                {/* Footer hint */}
-                {sortedDownloadQualities.length > 0 && (
-                  <div className="pt-2 mt-2 border-t border-gray-800/60 flex items-center justify-between text-[10px] text-gray-500 shrink-0">
-                    <span className="flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-rose-500" />
-                      Klik server untuk download
-                    </span>
-                    <span>Ikon salin untuk IDM/FDM</span>
+                        )
+                      })
+                    )}
                   </div>
-                )}
-              </div>
-            )}
+
+                  {/* Footer hint */}
+                  {sortedDownloadQualities.length > 0 && (
+                    <div className="pt-2 mt-2 border-t border-gray-800/60 flex items-center justify-between text-[10px] text-gray-500 shrink-0">
+                      <span className="flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-rose-500" />
+                        Klik server untuk download
+                      </span>
+                      <span>Ikon salin untuk IDM/FDM</span>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

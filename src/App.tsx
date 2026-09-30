@@ -14,6 +14,7 @@ import { ComicReaderModal } from './components/ComicReaderModal'
 import { ScheduleView } from './components/ScheduleView'
 import { HistoryBookmarkView } from './components/HistoryBookmarkView'
 import { HeroCarousel } from './components/HeroCarousel'
+import { GenreView } from './components/GenreView'
 import {
   Clock,
   CheckCircle2,
@@ -23,12 +24,23 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
 
 export function App() {
   const [activeTab, setActiveTab] = useState<
-    'anime' | 'komik' | 'schedule' | 'bookmark' | 'history' | 'search'
+    'anime' | 'komik' | 'schedule' | 'bookmark' | 'history' | 'search' | 'anime-genres' | 'comic-genres'
   >('anime')
   const [subFilter, setSubFilter] = useState('home')
+  const [selectedGenreState, setSelectedGenreState] = useState<{
+    id?: string
+    title?: string
+    type: 'anime' | 'comic'
+  } | null>(null)
+
+  const handleOpenGenre = (genreId: string, genreTitle: string, type: 'anime' | 'comic') => {
+    setSelectedGenreState({ id: genreId, title: genreTitle, type })
+    setActiveTab(type === 'anime' ? 'anime-genres' : 'comic-genres')
+  }
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('')
@@ -226,11 +238,20 @@ export function App() {
         />
 
         {/* Main Content Scrollable Area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-8">
-          {/* TAB: SEARCH RESULTS */}
-          {activeTab === 'search' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between pb-3 border-b border-gray-800">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              className="space-y-8"
+            >
+              {/* TAB: SEARCH RESULTS */}
+              {activeTab === 'search' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-800">
                 <div>
                   <h2 className="text-xl font-black text-white">
                     Hasil Pencarian untuk: &ldquo;{searchQuery}&rdquo;
@@ -641,81 +662,115 @@ export function App() {
             />
           )}
 
-          {/* TAB: RIWAYAT */}
-          {activeTab === 'history' && (
-            <HistoryBookmarkView
-              type="history"
-              onSelectAnimeId={(id) => setSelectedAnimeId(id)}
-              onSelectComicSlug={(slug) => setSelectedComicSlug(slug)}
-            />
-          )}
+              {/* TAB: RIWAYAT */}
+              {activeTab === 'history' && (
+                <HistoryBookmarkView
+                  type="history"
+                  onSelectAnimeId={(id) => setSelectedAnimeId(id)}
+                  onSelectComicSlug={(slug) => setSelectedComicSlug(slug)}
+                />
+              )}
+
+              {/* TAB: GENRE ANIME */}
+              {activeTab === 'anime-genres' && (
+                <GenreView
+                  initialType="anime"
+                  initialGenreId={selectedGenreState?.type === 'anime' ? selectedGenreState.id : undefined}
+                  initialGenreTitle={selectedGenreState?.type === 'anime' ? selectedGenreState.title : undefined}
+                  onSelectAnimeId={(id) => setSelectedAnimeId(id)}
+                  onSelectComicSlug={(slug) => setSelectedComicSlug(slug)}
+                />
+              )}
+
+              {/* TAB: GENRE KOMIK */}
+              {activeTab === 'comic-genres' && (
+                <GenreView
+                  initialType="comic"
+                  initialGenreId={selectedGenreState?.type === 'comic' ? selectedGenreState.id : undefined}
+                  initialGenreTitle={selectedGenreState?.type === 'comic' ? selectedGenreState.title : undefined}
+                  onSelectAnimeId={(id) => setSelectedAnimeId(id)}
+                  onSelectComicSlug={(slug) => setSelectedComicSlug(slug)}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 
       {/* ── MODALS ───────────────────────────────────────────────────────────── */}
       {/* 1. Anime Detail Modal */}
-      {selectedAnimeId && (
-        <AnimeDetailModal
-          animeId={selectedAnimeId}
-          onClose={() => setSelectedAnimeId(null)}
-          onPlayEpisode={(title, poster, ep, allEps) => {
-            setPlayingEpisodeData({
-              animeTitle: title,
-              animePoster: poster,
-              animeId: selectedAnimeId,
-              episodeInfo: ep,
-              allEpisodes: allEps,
-            })
-          }}
-          onSelectAnime={(anime) => setSelectedAnimeId(anime.id)}
-        />
-      )}
+      <AnimatePresence>
+        {selectedAnimeId && (
+          <AnimeDetailModal
+            animeId={selectedAnimeId}
+            onClose={() => setSelectedAnimeId(null)}
+            onPlayEpisode={(title, poster, ep, allEps) => {
+              setPlayingEpisodeData({
+                animeTitle: title,
+                animePoster: poster,
+                animeId: selectedAnimeId,
+                episodeInfo: ep,
+                allEpisodes: allEps,
+              })
+            }}
+            onSelectAnime={(anime) => setSelectedAnimeId(anime.id)}
+            onSelectGenre={(gId, gTitle) => handleOpenGenre(gId, gTitle, 'anime')}
+          />
+        )}
+      </AnimatePresence>
 
       {/* 2. Anime Player Modal */}
-      {playingEpisodeData && (
-        <AnimePlayerModal
-          animeTitle={playingEpisodeData.animeTitle}
-          animePoster={playingEpisodeData.animePoster}
-          animeId={playingEpisodeData.animeId}
-          episodeInfo={playingEpisodeData.episodeInfo}
-          allEpisodes={playingEpisodeData.allEpisodes}
-          onClose={() => setPlayingEpisodeData(null)}
-          onSelectEpisode={(ep) => {
-            setPlayingEpisodeData((prev) => (prev ? { ...prev, episodeInfo: ep } : null))
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {playingEpisodeData && (
+          <AnimePlayerModal
+            animeTitle={playingEpisodeData.animeTitle}
+            animePoster={playingEpisodeData.animePoster}
+            animeId={playingEpisodeData.animeId}
+            episodeInfo={playingEpisodeData.episodeInfo}
+            allEpisodes={playingEpisodeData.allEpisodes}
+            onClose={() => setPlayingEpisodeData(null)}
+            onSelectEpisode={(ep) => {
+              setPlayingEpisodeData((prev) => (prev ? { ...prev, episodeInfo: ep } : null))
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* 3. Comic Detail Modal */}
-      {selectedComicSlug && (
-        <ComicDetailModal
-          slug={selectedComicSlug}
-          onClose={() => setSelectedComicSlug(null)}
-          onReadChapter={(comicSlug, comicTitle, chapter, allChapters) => {
-            setReadingChapterData({
-              comicSlug,
-              comicTitle,
-              chapter,
-              allChapters,
-            })
-          }}
-          onSelectComic={(comic) => setSelectedComicSlug(comic.slug)}
-        />
-      )}
+      <AnimatePresence>
+        {selectedComicSlug && (
+          <ComicDetailModal
+            slug={selectedComicSlug}
+            onClose={() => setSelectedComicSlug(null)}
+            onReadChapter={(comicSlug, comicTitle, chapter, allChapters) => {
+              setReadingChapterData({
+                comicSlug,
+                comicTitle,
+                chapter,
+                allChapters,
+              })
+            }}
+            onSelectComic={(comic) => setSelectedComicSlug(comic.slug)}
+            onSelectGenre={(gSlug, gTitle) => handleOpenGenre(gSlug, gTitle, 'comic')}
+          />
+        )}
+      </AnimatePresence>
 
       {/* 4. Comic Reader Modal */}
-      {readingChapterData && (
-        <ComicReaderModal
-          comicSlug={readingChapterData.comicSlug}
-          comicTitle={readingChapterData.comicTitle}
-          chapter={readingChapterData.chapter}
-          allChapters={readingChapterData.allChapters}
-          onClose={() => setReadingChapterData(null)}
-          onSelectChapter={(chap) => {
-            setReadingChapterData((prev) => (prev ? { ...prev, chapter: chap } : null))
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {readingChapterData && (
+          <ComicReaderModal
+            comicSlug={readingChapterData.comicSlug}
+            comicTitle={readingChapterData.comicTitle}
+            chapter={readingChapterData.chapter}
+            allChapters={readingChapterData.allChapters}
+            onClose={() => setReadingChapterData(null)}
+            onSelectChapter={(chap) => {
+              setReadingChapterData((prev) => (prev ? { ...prev, chapter: chap } : null))
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

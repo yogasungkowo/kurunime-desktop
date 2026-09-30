@@ -22,6 +22,12 @@ export interface Anime {
   latestReleaseDate?: string
 }
 
+export interface AnimeGenreItem {
+  genreId: string
+  title: string
+  otakudesuUrl?: string
+}
+
 export interface EpisodeInfo {
   num?: number
   title: string

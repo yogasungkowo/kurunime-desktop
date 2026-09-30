@@ -1,4 +1,4 @@
-import type { Anime, AnimeDetail, AnimeScheduleDay, EpisodeDetail } from '../types/anime'
+import type { Anime, AnimeDetail, AnimeGenreItem, AnimeScheduleDay, EpisodeDetail } from '../types/anime'
 
 const getBaseUrl = () => {
   const custom = typeof window !== 'undefined' ? localStorage.getItem('custom_anime_api') : null
@@ -227,6 +227,42 @@ export const animeApi = {
       }
     } catch (err) {
       console.error(`Failed to fetch completed anime:`, err)
+      return { list: [], hasNext: false, totalPages: 1, currentPage: page }
+    }
+  },
+
+  async getGenres(): Promise<AnimeGenreItem[]> {
+    try {
+      const res = await fetch(`${getBaseUrl()}/genre`, { headers: { accept: 'application/json' } })
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+      const json = await res.json()
+      return json?.data?.genreList || []
+    } catch (err) {
+      console.error('Failed to fetch anime genres:', err)
+      return []
+    }
+  },
+
+  async getAnimeByGenre(
+    genreId: string,
+    page = 1
+  ): Promise<{ list: Anime[]; hasNext: boolean; totalPages: number; currentPage: number }> {
+    try {
+      const res = await fetch(`${getBaseUrl()}/genre/${encodeURIComponent(genreId)}?page=${page}`, {
+        headers: { accept: 'application/json' },
+      })
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+      const json = await res.json()
+      const rawList = json?.data?.animeList || []
+      const pagination = json?.pagination || json?.data?.pagination
+      return {
+        list: rawList.map(mapApiToAnime),
+        hasNext: pagination ? pagination.hasNextPage : rawList.length > 0,
+        totalPages: pagination?.totalPages || 1,
+        currentPage: pagination?.currentPage || page,
+      }
+    } catch (err) {
+      console.error(`Failed to fetch anime by genre ${genreId}:`, err)
       return { list: [], hasNext: false, totalPages: 1, currentPage: page }
     }
   },

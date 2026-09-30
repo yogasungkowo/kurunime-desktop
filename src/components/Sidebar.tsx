@@ -8,6 +8,7 @@ import {
   Flame,
   CheckCircle2,
   Clock,
+  Tags,
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -88,6 +89,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Calendar className="w-4 h-4" />
               Jadwal Rilis
             </button>
+            <button
+              onClick={() => {
+                setActiveTab('anime-genres')
+              }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition ${
+                activeTab === 'anime-genres'
+                  ? 'bg-rose-600/15 text-rose-400 border border-rose-500/20'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/40'
+              }`}
+            >
+              <Tags className="w-4 h-4" />
+              Genre Anime
+            </button>
           </div>
         </div>
 
@@ -167,6 +181,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <span>Manhua</span>
               <span className="text-[10px] text-gray-500">CN</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('comic-genres')
+              }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition ${
+                activeTab === 'comic-genres'
+                  ? 'bg-rose-600/15 text-rose-400 border border-rose-500/20'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/40'
+              }`}
+            >
+              <Tags className="w-4 h-4" />
+              Genre Komik
             </button>
           </div>
         </div>
